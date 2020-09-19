@@ -1,0 +1,14 @@
+{
+  "name": "meeting-index",
+  "version": "1.0.0",
+  "description": "Calculates how much time in a week is taken by meetings.",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "author": "Stefan Schneider-Kennedy",
+  "license": "GPLv3",
+  "devDependencies": {
+    "jest": "^26.2.2"
+  }
+}

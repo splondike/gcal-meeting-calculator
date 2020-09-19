@@ -1,0 +1,5 @@
+This single page javascript application calculates how much time you spend in and around meetings vs other types of work. It uses the Google calendar API to see what your meetings are.
+
+# Testing
+
+Just run `npm test` or ./node_modules/.bin/jest to run the tests.

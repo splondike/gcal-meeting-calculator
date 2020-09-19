@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="en">
+<head>
+<title>Meetings impact</title>
+<meta charset="utf-8" />
+<style type="text/css">
+@keyframes wipe_right {
+  from {width: 0em;}
+  to {width: 1em;}
+}
+
+html {
+    background: #e6e5e0;
+    --meeting-color: rgb(121, 134, 203);
+    --deep-color: rgb(192, 202, 51);
+    --shallow-color: rgb(236, 239, 194);
+    --button-color: #1a73e8;
+}
+body {
+    background: #fff;
+    box-shadow: 10px black;
+    margin: 0 auto;
+    max-width: 800px;
+    padding: 20px;
+    min-height: 100%;
+    font-family: sans-serif;
+    font-size: 16px;
+    position: relative;
+}
+h1 {
+    background: url('https://ssl.gstatic.com/calendar/images/dynamiclogo/2x/cal_08_v2.png') no-repeat left center;
+    background-size: 35px 35px;
+    padding-left: 40px;
+    font-weight: normal;
+    font-size: 40px;
+    margin: 0 0 20px 0;
+}
+.hbar {
+    height: 20px;
+    background: black;
+    display: inline-block;
+}
+.hbar--meeting {
+    background: var(--meeting-color);
+}
+.hbar--deep {
+    background: var(--deep-color);
+}
+.hbar--shallow {
+    background: var(--shallow-color);
+}
+.to-cell {
+    padding-right: 10px;
+}
+.to-cell:before {
+    content: '\2192';
+    font-size: 18px;
+    position: relative;
+    top: -2px;
+}
+.color-key {
+    margin: 10px 0;
+    padding: 0;
+}
+.color-key li {
+    list-style: none;
+    display: inline;
+    padding-left: 10px;
+}
+.color-key li:first-child {
+    padding-left: 0;
+}
+.color-key li:before, .cell:before {
+    background: black;
+    content: '';
+    width: 10px;
+    height: 10px;
+    display: inline-block;
+    margin-right: 3px;
+}
+.color-key li.meeting:before, .cell--meeting:before {
+    background: var(--meeting-color);
+}
+.color-key li.deep:before, .cell--deep:before {
+    background: var(--deep-color);
+}
+.color-key li.shallow:before, .cell--shallow:before {
+    background: var(--shallow-color);
+}
+.results {
+    margin-top: 30px;
+}
+.results table {
+    width: 100%;
+}
+.results table td {
+    width:1%;
+    white-space:nowrap;
+}
+.results table .graph-cell {
+    width: auto;
+}
+.button {
+    border-radius: 5px;
+    background: var(--button-color);
+    border: 0;
+    padding: 10px 10px;
+    font-size: 16px;
+    color: #fff;
+    cursor: pointer;
+}
+.button:hover, .button:disabled {
+    background: #3885ea;
+}
+.button:disabled {
+    cursor: default;
+    color: #86a6d0;
+}
+.button--reveal {
+    width: 100%;
+    background: transparent;
+    border: 1px solid #ccc;
+    color: #aaa;
+    height: 40px;
+    margin: 10px 0;
+}
+.button--reveal:hover {
+    background: #eee;
+}
+.settings-row {
+    margin-bottom: 10px;
+}
+.loading_spinner {
+    display: inline-block;
+    overflow: hidden;
+    vertical-align: bottom;
+    animation-name: wipe_right;
+    animation-duration: 1s;
+    animation-iteration-count: infinite;
+}
+.notification {
+    padding: 10px;
+    border: 1px solid #999;
+    background: #ddd;
+}
+</style>
+</head>
+<body>
+    <h1>Meetings impact</h1>
+    <p>Calculator to get an idea of how much time you spend in meetings vs doing other things based on your Google calendar. It ignores meetings that only have you as an attendee, or that you haven't accepted. It also doesn't consider lunch. Probably you can subtract however long you usually take for that from the deep work minutes.</p>
+    <noscript>
+        <p class="notification">This web page requires javascript to run.</p>
+    </noscript>
+
+    <div id="loading_api">
+        <p>Loading Google API<span class="loading_spinner">...</span></p>
+    </div>
+
+    <div id="auth_to_google" style="display: none">
+        <button id="auth_button" class="button" disabled>Sign in to Google Calendar</button>
+    </div>
+
+    <div id="settings" style="display: none">
+        <form method="get">
+            <div class="settings-row">
+                Work hours:
+                <input type="time" value="09:00" id="start_work_time" name="start_work_time"> to <input type="time" value="17:00" id="end_work_time" name="end_work_time">
+            </div>
+            <div class="settings-row">
+                Days worked:
+                <label for="wd_0"><input type="checkbox" id="wd_0" name="wd_0" checked> M</label>
+                <label for="wd_1"><input type="checkbox" id="wd_1" name="wd_1" checked> T</label>
+                <label for="wd_2"><input type="checkbox" id="wd_2" name="wd_2" checked> W</label>
+                <label for="wd_3"><input type="checkbox" id="wd_3" name="wd_3" checked> T</label>
+                <label for="wd_4"><input type="checkbox" id="wd_4" name="wd_4" checked> F</label>
+                <label for="wd_5"><input type="checkbox" id="wd_5" name="wd_5"> S</label>
+                <label for="wd_6"><input type="checkbox" id="wd_6" name="wd_6"> S</label>
+            </div>
+            <div class="settings-row">
+                <label for="start_date">Start date: <input type="date" id="start_date" name="start_date"></label>
+            </div>
+            <div class="settings-row">
+                <label for="end_date">End date: <input type="date" id="end_date" name="end_date"></label>
+            </div>
+            <div class="settings-row">
+                <label for="calendar_input">
+                    Calendar to use:
+                    <select id="calendar_input" name="calendar">
+                        <option value="primary">primary</option>
+                    </select>
+                </label>
+            </div>
+            <p>These next settings control how much you expect preparation and note taking etc. from meetings to extend the amount of time noted on Google Calendar itself on average. The minimum deep work minutes is the amount of time it normally takes you to get into a 'deep work' state.</p>
+            <div class="settings-row">
+                <label for="disruption_before">Minutes disruption before meetings: <input type="number" id="disruption_before" name="disruption_before" value="5"></label>
+            </div>
+            <div class="settings-row">
+                <label for="disruption_after">Minutes disruption after meetings: <input type="number" id="disruption_after" name="disruption_after" value="10"></label>
+            </div>
+            <div class="settings-row">
+                <label for="min_deep_work">Minimum deep work minutes: <input type="number" id="min_deep_work" name="min_deep_work" value="60"></label>
+            </div>
+
+            <button class="button">Load results</button>
+        </form>
+    </div>
+
+    <div id="loading_results" style="display: none;">
+        <p>Loading results<span class="loading_spinner">...</span></p>
+    </div>
+
+    <div id="results" class="results" style="display: none;">
+    <button id="show_settings" class="button button--reveal">Show settings</button>
+    <ul class="color-key">
+        <li class="deep">Deep work opportunities</li><li class="shallow">Shallow work</li><li class="meeting">Meetings</li>
+    </ul>
+
+    <table>
+        <tbody id="result_rows">
+            <tr>
+                <td>2020-08-08</td>
+                <td class="to-cell">2020-08-15</td>
+                <td class="cell cell--deep">04:00</td>
+                <td class="cell cell--shallow">14:00</td>
+                <td class="cell cell--meeting">02:10</td>
+                <td class="graph-cell"><div class="hbar hbar-deep" style="width:30%"></div><div class="hbar hbar-shallow" style="width:10%"></div><div class="hbar hbar-meeting" style="width:60%"></div></td>
+            </tr>
+        </tbody>
+    </table>
+    </div>
+
+    <script>
+    window.google_creds = {
+      'client_id': '344813142960-ahaqp9ebmcec5bn4lju680g6vp4hm84c.apps.googleusercontent.com',
+      'api_key': 'AIzaSyAkNGic1vo2dxZFzaXJ5d7MRAQcOcIrFHc'
+    };
+    </script>
+    <script src="calculator.js"></script>
+    <script src="main.js"></script>
+    <script async defer src="https://apis.google.com/js/api.js"
+      onload="googleApiLoaded()"
+      onreadystatechange="if (this.readyState === 'complete') this.onload()">
+    </script>
+</body>
+</html>
